@@ -16,7 +16,7 @@ void x16rw_getAlgoString( const char* prevblock, char *output )
    *sptr = '\0';
 }
 
-void x16s_getAlgoString( const char* prevblock, char *output )
+void x16rws_getAlgoString( const char* prevblock, char *output )
 {
    uint8_t* data = (uint8_t*)prevblock;
    strcpy( output, "0123456789ABCDEF" );
@@ -50,7 +50,7 @@ bool register_x16rw_algo( algo_gate_t* gate )
   return true;
 };
 
-bool register_x16s_algo( algo_gate_t* gate )
+bool register_x16rws_algo( algo_gate_t* gate )
 {
 #if defined (X16RW_4WAY)
   init_x16rw_4way_ctx();
@@ -63,7 +63,7 @@ bool register_x16s_algo( algo_gate_t* gate )
 #endif
   gate->optimizations = SSE2_OPT | AES_OPT | AVX2_OPT;
   gate->set_target = (void*)&alt_set_target;
-  x16_rw_s_getAlgoString = (void*)&x16s_getAlgoString;
+  x16_rw_s_getAlgoString = (void*)&x16rws_getAlgoString;
   return true;
 };
 

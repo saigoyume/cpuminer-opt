@@ -31,10 +31,10 @@ enum x16rw_Algo {
 
 bool (*x16_rw_s_getAlgoString) ( const char*, char* );
 void x16rw_getAlgoString( const char* prevblock, char *output );
-void x16s_getAlgoString( const char* prevblock, char *output );
+void x16rws_getAlgoString( const char* prevblock, char *output );
 
 bool register_x16rw_algo( algo_gate_t* gate );
-bool register_x16s_algo( algo_gate_t* gate );
+bool register_x16rws_algo( algo_gate_t* gate );
 
 #if defined(X16RW_4WAY)
 
