@@ -16,6 +16,7 @@ void x16rw_getAlgoString( const char* prevblock, char *output )
          sprintf(sptr, "%u", (uint32_t) algoDigit);
       sptr++;
    }
+   uint8_t algoDigit;
    if(sumOfSeven < 28)
       algoDigit = 0;
    else if(sumOfSeven < 39)
