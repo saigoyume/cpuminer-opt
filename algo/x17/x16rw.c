@@ -76,8 +76,7 @@ void x16rw_hash( void* output, const void* input )
       const uint8_t* in8 = (uint8_t*) input;
       x16_rw_s_getAlgoString( &in8[4], hashOrder );
    }
-
-   for ( int i = 0; i < 16; i++ )
+   for ( int i = 8; i < 16; i++ )
    {
       const char elem = hashOrder[i];
       const uint8_t algo = elem >= 'A' ? elem - 'A' + 10 : elem - '0';

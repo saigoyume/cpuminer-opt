@@ -3,16 +3,57 @@
 void x16rw_getAlgoString( const char* prevblock, char *output )
 {
    char *sptr = output;
-   for ( int j = 0; j < X16RW_HASH_FUNC_COUNT; j++ )
+   uint8_t sumOfSeven = 0;
+   for ( int j = 0; j < X16RW_HASH_FUNC_COUNT - 1; j++ )
    {
       uint8_t b = (15 - j) >> 1; // 16 first ascii hex chars (lsb in uint256)
       uint8_t algoDigit = (j & 1) ? prevblock[b] & 0xF : prevblock[b] >> 4;
+      if (j > 7)
+         sumOfSeven += algoDigit;
       if (algoDigit >= 10)
-          sprintf(sptr, "%c", 'A' + (algoDigit - 10));
+         sprintf(sptr, "%c", 'A' + (algoDigit - 10));
       else
-          sprintf(sptr, "%u", (uint32_t) algoDigit);
+         sprintf(sptr, "%u", (uint32_t) algoDigit);
       sptr++;
    }
+   if(sumOfSeven < 28)
+      algoDigit = 0;
+   else if(sumOfSeven < 39)
+      algoDigit = 1;
+   else if(sumOfSeven < 47)
+      algoDigit = 2;
+   else if(sumOfSeven < 54)
+      algoDigit = 3;
+   else if(sumOfSeven < 61)
+      algoDigit = 4;
+   else if(sumOfSeven < 66)
+      algoDigit = 5;
+   else if(sumOfSeven < 72)
+      algoDigit = 6;
+   else if(sumOfSeven < 76)
+      algoDigit = 7;
+   else if(sumOfSeven < 81)
+      algoDigit = 8;
+   else if(sumOfSeven < 86)
+      algoDigit = 9;
+   else if(sumOfSeven < 90)
+      algoDigit = 10;
+   else if(sumOfSeven < 94)
+      algoDigit = 11;
+   else if(sumOfSeven < 97)
+      algoDigit = 12;
+   else if(sumOfSeven < 100)
+      algoDigit = 13;
+   else if(sumOfSeven < 103)
+      algoDigit = 14;
+   else
+      algoDigit = 15;
+   if (algoDigit >= 10)
+      sprintf(sptr, "%c", 'A' + (algoDigit - 10));
+   else
+      sprintf(sptr, "%u", (uint32_t) algoDigit);
+   sptr++;
+
    *sptr = '\0';
 }
 
