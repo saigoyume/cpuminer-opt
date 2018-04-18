@@ -114,8 +114,9 @@ Supported Algorithms
                           x14          X14
                           x15          X15
                           x16r         Ravencoin (RVN)
-                          x16s         pigeoncoin (PGN)
-                          x17
+                          x16s         Pigeoncoin (PGN)
+                          x16rw        Carrot (CRO)
+			  x17
                           xevan        Bitsend (BSD)
                           yescrypt     Globalboost-Y (BSTY)
                           yescryptr8   BitZeny (ZNY)
