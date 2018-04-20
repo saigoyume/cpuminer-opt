@@ -26,7 +26,7 @@ enum x16rw_Algo {
 	FUGUE,
 	GROESTL,
 	HAMSI,
-        X16RW_HASH_FUNC_COUNT
+        X16RW_HASH_FUNC_COUNT = 8
 };
 
 bool (*x16_rw_s_getAlgoString) ( const char*, char* );

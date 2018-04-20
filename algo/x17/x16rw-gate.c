@@ -6,10 +6,9 @@ void x16rw_getAlgoString( const char* prevblock, char *output )
    uint8_t sumOfSeven = 0;
    for ( int j = 0; j < X16RW_HASH_FUNC_COUNT - 1; j++ )
    {
-      uint8_t b = (15 - j) >> 1; // 16 first ascii hex chars (lsb in uint256)
+      uint8_t b = (7 - j) >> 1; // 16 first ascii hex chars (lsb in uint256)
       uint8_t algoDigit = (j & 1) ? prevblock[b] & 0xF : prevblock[b] >> 4;
-      if (j > 7)
-         sumOfSeven += algoDigit;
+      sumOfSeven += algoDigit;
       if (algoDigit >= 10)
          sprintf(sptr, "%c", 'A' + (algoDigit - 10));
       else

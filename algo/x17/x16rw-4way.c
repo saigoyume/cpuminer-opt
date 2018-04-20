@@ -34,22 +34,22 @@ static __thread char hashOrder[X16RW_HASH_FUNC_COUNT + 1] = { 0 };
 
 
 typedef struct {
-    blake512_4way_context   blake;
-    bmw512_4way_context     bmw;
-    hashState_echo          echo;
-    hashState_groestl       groestl;
     skein512_4way_context   skein;
-    jh512_4way_context      jh;
-    keccak512_4way_context  keccak;
-    luffa_2way_context      luffa;
-    cubehashParam           cube;
-    sph_shavite512_context  shavite;
-    simd_2way_context       simd;
-    hamsi512_4way_context   hamsi;
-    sph_fugue512_context    fugue;
-    shabal512_4way_context  shabal;
-    sph_whirlpool_context   whirlpool;
+    bmw512_4way_context     bmw;
+    blake512_4way_context   blake;
     sha512_4way_context     sha512;
+    shabal512_4way_context  shabal;
+    keccak512_4way_context  keccak;
+    sph_shavite512_context  shavite;
+    sph_whirlpool_context   whirlpool;
+    cubehashParam           cube;
+    jh512_4way_context      jh;
+    luffa_2way_context      luffa;
+    hashState_echo          echo;
+    simd_2way_context       simd;
+    sph_fugue512_context    fugue;
+    hashState_groestl       groestl;
+    hamsi512_4way_context   hamsi;
 } x16rw_4way_ctx_holder;
 
 x16rw_4way_ctx_holder x16rw_4way_ctx __attribute__ ((aligned (64)));
@@ -104,16 +104,16 @@ void x16rw_4way_hash( void* output, const void* input )
 
       switch ( algo )
       {
-         case BLAKE:
-            blake512_4way_init( &ctx.blake );
+         case SKEIN:
+            skein512_4way_init( &ctx.skein );
             if ( i == 0 )
-               blake512_4way( &ctx.blake, input, size );
+               skein512_4way( &ctx.skein, input, size );
             else
             {
                mm256_interleave_4x64( vhash, in0, in1, in2, in3, size<<3 );
-               blake512_4way( &ctx.blake, vhash, size );
+               skein512_4way( &ctx.skein, vhash, size );
             }
-            blake512_4way_close( &ctx.blake, vhash );
+            skein512_4way_close( &ctx.skein, vhash );
             mm256_deinterleave_4x64( hash0, hash1, hash2, hash3, vhash, 512 );
          break;
          case BMW:
@@ -128,43 +128,31 @@ void x16rw_4way_hash( void* output, const void* input )
             bmw512_4way_close( &ctx.bmw, vhash );
             mm256_deinterleave_4x64( hash0, hash1, hash2, hash3, vhash, 512 );
          break;
-         case GROESTL:
-               init_groestl( &ctx.groestl, 64 );
-               update_and_final_groestl( &ctx.groestl, (char*)hash0,
-                                                 (const char*)in0, size<<3 );
-               init_groestl( &ctx.groestl, 64 );
-               update_and_final_groestl( &ctx.groestl, (char*)hash1,
-                                                 (const char*)in1, size<<3 );
-               init_groestl( &ctx.groestl, 64 );
-               update_and_final_groestl( &ctx.groestl, (char*)hash2,
-                                                 (const char*)in2, size<<3 );
-               init_groestl( &ctx.groestl, 64 );
-               update_and_final_groestl( &ctx.groestl, (char*)hash3,
-                                                 (const char*)in3, size<<3 );
-         break;
-         case SKEIN:
-            skein512_4way_init( &ctx.skein );
+         case BLAKE:
+            blake512_4way_init( &ctx.blake );
             if ( i == 0 )
-               skein512_4way( &ctx.skein, input, size );
+               blake512_4way( &ctx.blake, input, size );
             else
             {
                mm256_interleave_4x64( vhash, in0, in1, in2, in3, size<<3 );
-               skein512_4way( &ctx.skein, vhash, size );
+               blake512_4way( &ctx.blake, vhash, size );
             }
-            skein512_4way_close( &ctx.skein, vhash );
+            blake512_4way_close( &ctx.blake, vhash );
             mm256_deinterleave_4x64( hash0, hash1, hash2, hash3, vhash, 512 );
          break;
-         case JH:
-            jh512_4way_init( &ctx.jh );
-            if ( i == 0 )
-               jh512_4way( &ctx.jh, input, size );
-            else
-            {
-               mm256_interleave_4x64( vhash, in0, in1, in2, in3, size<<3 );
-               jh512_4way( &ctx.jh, vhash, size );
-            }
-            jh512_4way_close( &ctx.jh, vhash );
-            mm256_deinterleave_4x64( hash0, hash1, hash2, hash3, vhash, 512 );
+         case SHA_512:
+             mm256_interleave_4x64( vhash, in0, in1, in2, in3, size<<3 );
+             sha512_4way_init( &ctx.sha512 );
+             sha512_4way( &ctx.sha512, vhash, size );
+             sha512_4way_close( &ctx.sha512, vhash );
+             mm256_deinterleave_4x64( hash0, hash1, hash2, hash3, vhash, 512 );
+         break;
+         case SHABAL:
+             mm_interleave_4x32( vhash, in0, in1, in2, in3, size<<3 );
+             shabal512_4way_init( &ctx.shabal );
+             shabal512_4way( &ctx.shabal, vhash, size );
+             shabal512_4way_close( &ctx.shabal, vhash );
+             mm_deinterleave_4x32( hash0, hash1, hash2, hash3, vhash, 512 );
          break;
          case KECCAK:
             keccak512_4way_init( &ctx.keccak );
@@ -177,30 +165,6 @@ void x16rw_4way_hash( void* output, const void* input )
             }
             keccak512_4way_close( &ctx.keccak, vhash );
             mm256_deinterleave_4x64( hash0, hash1, hash2, hash3, vhash, 512 );
-         break;
-         case LUFFA:
-            mm256_interleave_2x128( vhash, in0, in1, size<<3 );
-            luffa_2way_init( &ctx.luffa, 512 );
-            luffa_2way_update_close( &ctx.luffa, vhash, vhash, size );
-            mm256_deinterleave_2x128( hash0, hash1, vhash, 512 );
-            mm256_interleave_2x128( vhash, in2, in3, size<<3 );
-            luffa_2way_init( &ctx.luffa, 512 );
-            luffa_2way_update_close( &ctx.luffa, vhash, vhash, size);
-            mm256_deinterleave_2x128( hash2, hash3, vhash, 512 );
-         break;
-         case CUBEHASH:
-            cubehashReinit( &ctx.cube );
-            cubehashUpdateDigest( &ctx.cube, (byte*) hash0,
-                                  (const byte*)in0, size );
-            cubehashReinit( &ctx.cube );
-            cubehashUpdateDigest( &ctx.cube, (byte*) hash1,
-                                  (const byte*)in1, size );
-            cubehashReinit( &ctx.cube );
-            cubehashUpdateDigest( &ctx.cube, (byte*) hash2,
-                                  (const byte*)in2, size );
-            cubehashReinit( &ctx.cube );
-            cubehashUpdateDigest( &ctx.cube, (byte*) hash3,
-                                        (const byte*)in3, size );
          break;
          case SHAVITE:
             sph_shavite512_init( &ctx.shavite );
@@ -216,14 +180,54 @@ void x16rw_4way_hash( void* output, const void* input )
             sph_shavite512( &ctx.shavite, in3, size );
             sph_shavite512_close( &ctx.shavite, hash3 );
          break;
-         case SIMD:
+         case WHIRLPOOL:
+             sph_whirlpool_init( &ctx.whirlpool );
+             sph_whirlpool( &ctx.whirlpool, in0, size );
+             sph_whirlpool_close( &ctx.whirlpool, hash0 );
+             sph_whirlpool_init( &ctx.whirlpool );
+             sph_whirlpool( &ctx.whirlpool, in1, size );
+             sph_whirlpool_close( &ctx.whirlpool, hash1 );
+             sph_whirlpool_init( &ctx.whirlpool );
+             sph_whirlpool( &ctx.whirlpool, in2, size );
+             sph_whirlpool_close( &ctx.whirlpool, hash2 );
+             sph_whirlpool_init( &ctx.whirlpool );
+             sph_whirlpool( &ctx.whirlpool, in3, size );
+             sph_whirlpool_close( &ctx.whirlpool, hash3 );
+         break;
+         case CUBEHASH:
+            cubehashReinit( &ctx.cube );
+            cubehashUpdateDigest( &ctx.cube, (byte*) hash0,
+                                  (const byte*)in0, size );
+            cubehashReinit( &ctx.cube );
+            cubehashUpdateDigest( &ctx.cube, (byte*) hash1,
+                                  (const byte*)in1, size );
+            cubehashReinit( &ctx.cube );
+            cubehashUpdateDigest( &ctx.cube, (byte*) hash2,
+                                  (const byte*)in2, size );
+            cubehashReinit( &ctx.cube );
+            cubehashUpdateDigest( &ctx.cube, (byte*) hash3,
+                                        (const byte*)in3, size );
+         break;
+         case JH:
+            jh512_4way_init( &ctx.jh );
+            if ( i == 0 )
+               jh512_4way( &ctx.jh, input, size );
+            else
+            {
+               mm256_interleave_4x64( vhash, in0, in1, in2, in3, size<<3 );
+               jh512_4way( &ctx.jh, vhash, size );
+            }
+            jh512_4way_close( &ctx.jh, vhash );
+            mm256_deinterleave_4x64( hash0, hash1, hash2, hash3, vhash, 512 );
+         break;
+         case LUFFA:
             mm256_interleave_2x128( vhash, in0, in1, size<<3 );
-            simd_2way_init( &ctx.simd, 512 );
-            simd_2way_update_close( &ctx.simd, vhash, vhash, size<<3 );
+            luffa_2way_init( &ctx.luffa, 512 );
+            luffa_2way_update_close( &ctx.luffa, vhash, vhash, size );
             mm256_deinterleave_2x128( hash0, hash1, vhash, 512 );
             mm256_interleave_2x128( vhash, in2, in3, size<<3 );
-            simd_2way_init( &ctx.simd, 512 );
-            simd_2way_update_close( &ctx.simd, vhash, vhash, size<<3 );
+            luffa_2way_init( &ctx.luffa, 512 );
+            luffa_2way_update_close( &ctx.luffa, vhash, vhash, size);
             mm256_deinterleave_2x128( hash2, hash3, vhash, 512 );
          break;
          case ECHO:
@@ -240,12 +244,15 @@ void x16rw_4way_hash( void* output, const void* input )
              update_final_echo ( &ctx.echo, (BitSequence *)hash3,
                                 (const BitSequence*)in3, size<<3 );
          break;
-         case HAMSI:
-             mm256_interleave_4x64( vhash, in0, in1, in2, in3, size<<3 );
-             hamsi512_4way_init( &ctx.hamsi );
-             hamsi512_4way( &ctx.hamsi, vhash, size );
-             hamsi512_4way_close( &ctx.hamsi, vhash );
-             mm256_deinterleave_4x64( hash0, hash1, hash2, hash3, vhash, 512 );
+         case SIMD:
+            mm256_interleave_2x128( vhash, in0, in1, size<<3 );
+            simd_2way_init( &ctx.simd, 512 );
+            simd_2way_update_close( &ctx.simd, vhash, vhash, size<<3 );
+            mm256_deinterleave_2x128( hash0, hash1, vhash, 512 );
+            mm256_interleave_2x128( vhash, in2, in3, size<<3 );
+            simd_2way_init( &ctx.simd, 512 );
+            simd_2way_update_close( &ctx.simd, vhash, vhash, size<<3 );
+            mm256_deinterleave_2x128( hash2, hash3, vhash, 512 );
          break;
          case FUGUE:
              sph_fugue512_init( &ctx.fugue );
@@ -261,32 +268,25 @@ void x16rw_4way_hash( void* output, const void* input )
              sph_fugue512( &ctx.fugue, in3, size );
              sph_fugue512_close( &ctx.fugue, hash3 );
          break;
-         case SHABAL:
-             mm_interleave_4x32( vhash, in0, in1, in2, in3, size<<3 );
-             shabal512_4way_init( &ctx.shabal );
-             shabal512_4way( &ctx.shabal, vhash, size );
-             shabal512_4way_close( &ctx.shabal, vhash );
-             mm_deinterleave_4x32( hash0, hash1, hash2, hash3, vhash, 512 );
+         case GROESTL:
+               init_groestl( &ctx.groestl, 64 );
+               update_and_final_groestl( &ctx.groestl, (char*)hash0,
+                                                 (const char*)in0, size<<3 );
+               init_groestl( &ctx.groestl, 64 );
+               update_and_final_groestl( &ctx.groestl, (char*)hash1,
+                                                 (const char*)in1, size<<3 );
+               init_groestl( &ctx.groestl, 64 );
+               update_and_final_groestl( &ctx.groestl, (char*)hash2,
+                                                 (const char*)in2, size<<3 );
+               init_groestl( &ctx.groestl, 64 );
+               update_and_final_groestl( &ctx.groestl, (char*)hash3,
+                                                 (const char*)in3, size<<3 );
          break;
-         case WHIRLPOOL:
-             sph_whirlpool_init( &ctx.whirlpool );
-             sph_whirlpool( &ctx.whirlpool, in0, size );
-             sph_whirlpool_close( &ctx.whirlpool, hash0 );
-             sph_whirlpool_init( &ctx.whirlpool );
-             sph_whirlpool( &ctx.whirlpool, in1, size );
-             sph_whirlpool_close( &ctx.whirlpool, hash1 );
-             sph_whirlpool_init( &ctx.whirlpool );
-             sph_whirlpool( &ctx.whirlpool, in2, size );
-             sph_whirlpool_close( &ctx.whirlpool, hash2 );
-             sph_whirlpool_init( &ctx.whirlpool );
-             sph_whirlpool( &ctx.whirlpool, in3, size );
-             sph_whirlpool_close( &ctx.whirlpool, hash3 );
-         break;
-         case SHA_512:
+         case HAMSI:
              mm256_interleave_4x64( vhash, in0, in1, in2, in3, size<<3 );
-             sha512_4way_init( &ctx.sha512 );
-             sha512_4way( &ctx.sha512, vhash, size );
-             sha512_4way_close( &ctx.sha512, vhash );
+             hamsi512_4way_init( &ctx.hamsi );
+             hamsi512_4way( &ctx.hamsi, vhash, size );
+             hamsi512_4way_close( &ctx.hamsi, vhash );
              mm256_deinterleave_4x64( hash0, hash1, hash2, hash3, vhash, 512 );
          break;
       }
